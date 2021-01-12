@@ -48,6 +48,7 @@ Loader::parseModule(const std::filesystem::path &FilePath) {
   using namespace std::literals::string_view_literals;
   if (FilePath.extension() == ".so"sv) {
     if (auto Res = LMgr.setPath(FilePath); !Res) {
+      spdlog::error(Res.error());
       spdlog::error(ErrInfo::InfoFile(FilePath));
       return Unexpect(Res);
     }
@@ -82,6 +83,7 @@ Loader::parseModule(const std::filesystem::path &FilePath) {
   } else {
     auto Mod = std::make_unique<AST::Module>();
     if (auto Res = FMgr.setPath(FilePath); !Res) {
+      spdlog::error(Res.error());
       spdlog::error(ErrInfo::InfoFile(FilePath));
       return Unexpect(Res);
     }

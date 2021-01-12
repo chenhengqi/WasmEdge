@@ -62,19 +62,16 @@ enum class ErrCode : uint8_t {
   DataCountRequired = 0x2B,      /// Datacount section required
   UnexpectedEndNode = 0x2C,      /// Unexpected end of sections or functions
   InvalidImportKind = 0x2D,      /// Malformed import kind
-  ExpectedZeroFlag = 0x2E,       /// Not loaded an expected zero flag
+  ExpectedZeroByte = 0x2E,       /// Not loaded an expected zero byte
   InvalidMut = 0x2F,             /// Malformed mutability
-  DupGlobal = 0x30,              /// Global duplicated
-  TooManyLocals = 0x31,          /// Local size too large
-  InvalidElemInstr = 0x32,       /// Invalid instructions in element segments
-  InvalidElemType = 0x33,        /// Malformed element type (Bulk-mem proposal)
-  InvalidRefType = 0x34,     /// Malformed reference type (Ref-types proposal)
-  InvalidElemSegKind = 0x35, /// Invalid element segment kind
-  InvalidUTF8 = 0x36,        /// Invalid utf-8 encoding
-  IntegerTooLarge = 0x37,    /// Invalid too large integer
-  IntegerTooLong = 0x38,     /// Invalid presentation too long integer
-  InvalidOpCode = 0x39,      /// Illegal OpCode
-  InvalidGrammar = 0x3A,     /// Parsing error
+  TooManyLocals = 0x30,          /// Local size too large
+  InvalidElemType = 0x31,        /// Malformed element type (Bulk-mem proposal)
+  InvalidRefType = 0x32,  /// Malformed reference type (Ref-types proposal)
+  InvalidUTF8 = 0x33,     /// Invalid utf-8 encoding
+  IntegerTooLarge = 0x34, /// Invalid too large integer
+  IntegerTooLong = 0x35,  /// Invalid presentation too long integer
+  InvalidOpCode = 0x36,   /// Illegal OpCode
+  InvalidGrammar = 0x37,  /// Parsing error
   /// Validation phase
   InvalidAlignment = 0x40,   /// Alignment > natural
   TypeCheckFailed = 0x41,    /// Got unexpected type when checking
@@ -149,14 +146,11 @@ static inline std::unordered_map<ErrCode, std::string> ErrCodeStr = {
     {ErrCode::DataCountRequired, "data count section required"},
     {ErrCode::UnexpectedEndNode, "unexpected end of section or function"},
     {ErrCode::InvalidImportKind, "malformed import kind"},
-    {ErrCode::ExpectedZeroFlag, "zero flag expected"},
+    {ErrCode::ExpectedZeroByte, "zero byte expected"},
     {ErrCode::InvalidMut, "malformed mutability"},
-    {ErrCode::DupGlobal, "duplicate global"},
     {ErrCode::TooManyLocals, "too many locals"},
-    {ErrCode::InvalidElemInstr, "invalid elem"},
     {ErrCode::InvalidElemType, "malformed element type"},
     {ErrCode::InvalidRefType, "malformed reference type"},
-    {ErrCode::InvalidElemSegKind, "invalid elements segment kind"},
     {ErrCode::InvalidUTF8, "malformed UTF-8 encoding"},
     {ErrCode::IntegerTooLarge, "integer too large"},
     {ErrCode::IntegerTooLong, "integer representation too long"},

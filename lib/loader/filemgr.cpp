@@ -25,7 +25,10 @@ Expect<void> FileMgr::setPath(const std::filesystem::path &FilePath) {
       Status = ErrCode::Success;
       return {};
     }
+    /// File size is 0, map failed.
     Map.reset();
+    Status = ErrCode::EndOfFile;
+    return Unexpect(Status);
   }
   Status = ErrCode::InvalidPath;
   return Unexpect(Status);

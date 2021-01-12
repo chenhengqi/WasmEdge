@@ -41,9 +41,6 @@ public:
   /// Read number of bytes into a vector.
   Expect<std::vector<Byte>> readBytes(size_t SizeToRead);
 
-  /// Read number of bytes into a vector.
-  Expect<void> readBytes(Span<Byte> Buffer);
-
   /// Read an unsigned int.
   Expect<uint32_t> readU32();
 
@@ -82,6 +79,9 @@ public:
   }
 
 private:
+  /// Read number of bytes into a vector.
+  Expect<void> readBytes(Span<Byte> Buffer);
+
   /// File manager status.
   ErrCode Status = ErrCode::EndOfFile;
   uint64_t Pos;
