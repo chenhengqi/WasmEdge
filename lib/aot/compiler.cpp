@@ -507,6 +507,8 @@ public:
     enterBlock(RetBB, nullptr, nullptr, {}, std::move(Type));
     compile(Code.getInstrs());
     assert(ControlStack.empty());
+    updateInstrCount();
+    writeGas();
     compileReturn();
 
     for (auto &[Error, BB] : TrapBB) {
@@ -644,6 +646,8 @@ public:
       case OpCode::Nop:
         break;
       case OpCode::Return:
+        updateInstrCount();
+        writeGas();
         compileReturn();
         setUnreachable();
         Builder.SetInsertPoint(
@@ -683,14 +687,19 @@ public:
         break;
       }
       case OpCode::Call:
+      case OpCode::Return_call:
         updateInstrCount();
         writeGas();
-        compileCallOp(Instr.getTargetIndex());
+        compileCallOp(Instr.getTargetIndex(),
+                      Instr.getOpCode() == OpCode::Return_call);
         break;
       case OpCode::Call_indirect:
+      case OpCode::Return_call_indirect:
         updateInstrCount();
         writeGas();
-        compileIndirectCallOp(Instr.getSourceIndex(), Instr.getTargetIndex());
+        compileIndirectCallOp(Instr.getSourceIndex(), Instr.getTargetIndex(),
+                              Instr.getOpCode() ==
+                                  OpCode::Return_call_indirect);
         break;
       case OpCode::Ref__null:
         stackPush(Builder.getInt64(0));
@@ -2744,8 +2753,6 @@ public:
   }
 
   void compileReturn() {
-    updateInstrCount();
-    writeGas();
     auto *Ty = F->getReturnType();
     if (Ty->isVoidTy()) {
       Builder.CreateRetVoid();
@@ -2787,7 +2794,7 @@ public:
   }
 
 private:
-  void compileCallOp(const unsigned int FuncIndex) {
+  void compileCallOp(const unsigned int FuncIndex, bool IsTailCall) {
     const auto &FuncType =
         *Context.FunctionTypes[std::get<0>(Context.Functions[FuncIndex])];
     const auto &Function = std::get<1>(Context.Functions[FuncIndex]);
@@ -2800,7 +2807,16 @@ private:
       Args[J + 1] = stackPop();
     }
 
+    if (IsTailCall) {
+      updateInstrCount();
+      writeGas();
+    }
+
     auto *Ret = Builder.CreateCall(Function, Args);
+    if (IsTailCall) {
+      Ret->setTailCall();
+    }
+
     auto *Ty = Ret->getType();
     if (Ty->isVoidTy()) {
       // nothing to do
@@ -2811,12 +2827,17 @@ private:
     } else {
       stackPush(Ret);
     }
-
-    readGas();
+    if (IsTailCall) {
+      compileReturn();
+      setUnreachable();
+      Builder.SetInsertPoint(llvm::BasicBlock::Create(LLContext, "ret.end", F));
+    } else {
+      readGas();
+    }
   }
 
   void compileIndirectCallOp(const uint32_t TableIndex,
-                             const uint32_t FuncTypeIndex) {
+                             const uint32_t FuncTypeIndex, bool IsTailCall) {
     llvm::Value *FuncIndex = stackPop();
     const auto &FuncType = *Context.FunctionTypes[FuncTypeIndex];
     auto *FTy = toLLVMType(Context.ExecCtxPtrTy, FuncType);
@@ -2853,7 +2874,12 @@ private:
           Arg, Builder.CreateBitCast(Ptr, Arg->getType()->getPointerTo()));
     }
 
-    Builder.CreateCall(
+    if (IsTailCall) {
+      updateInstrCount();
+      writeGas();
+    }
+
+    auto *Call = Builder.CreateCall(
         Context.getIntrinsic(
             Builder, AST::Module::Intrinsics::kCallIndirect,
             llvm::FunctionType::get(Context.VoidTy,
@@ -2863,6 +2889,9 @@ private:
                                     false)),
         {Builder.getInt32(TableIndex), Builder.getInt32(FuncTypeIndex),
          FuncIndex, Args, Rets});
+    if (IsTailCall) {
+      Call->setTailCall();
+    }
 
     if (RetSize == 0) {
       // nothing to do
@@ -2879,7 +2908,13 @@ private:
       }
     }
 
-    readGas();
+    if (IsTailCall) {
+      compileReturn();
+      setUnreachable();
+      Builder.SetInsertPoint(llvm::BasicBlock::Create(LLContext, "ret.end", F));
+    } else {
+      readGas();
+    }
   }
 
   void compileLoadOp(unsigned Offset, unsigned Alignment, llvm::Type *LoadTy) {

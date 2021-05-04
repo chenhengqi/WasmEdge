@@ -34,6 +34,13 @@ Expect<void> checkInstrProposals(OpCode Code, const Configure &Conf,
       return logNeedProposal(ErrCode::InvalidOpCode, Proposal::SIMD, Offset,
                              ASTNodeAttr::Instruction);
     }
+  } else if (Code == OpCode::Return_call ||
+             Code == OpCode::Return_call_indirect) {
+    /// These instructions are for TailCall proposal.
+    if (!Conf.hasProposal(Proposal::TailCall)) {
+      return logNeedProposal(ErrCode::InvalidOpCode, Proposal::TailCall, Offset,
+                             ASTNodeAttr::Instruction);
+    }
   }
   return {};
 }
@@ -124,9 +131,11 @@ Expect<void> Instruction::loadBinary(FileMgr &Mgr, const Configure &Conf) {
     }
 
   case OpCode::Call:
+  case OpCode::Return_call:
     return readU32(TargetIdx);
 
   case OpCode::Call_indirect:
+  case OpCode::Return_call_indirect:
     /// Read function index.
     if (auto Res = readU32(TargetIdx); !Res) {
       return Unexpect(Res);

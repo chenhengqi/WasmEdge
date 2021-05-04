@@ -27,6 +27,7 @@ int main(int Argc, const char *Argv[], const char *Env[]) {
   Conf.addProposal(WasmEdge::Proposal::BulkMemoryOperations);
   Conf.addProposal(WasmEdge::Proposal::ReferenceTypes);
   Conf.addProposal(WasmEdge::Proposal::SIMD);
+  Conf.addProposal(WasmEdge::Proposal::TailCall);
   WasmEdge::VM::VM VM(Conf);
 
   WasmEdge::Host::WasiModule *WasiMod =

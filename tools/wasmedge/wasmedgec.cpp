@@ -34,6 +34,7 @@ int main(int Argc, const char *Argv[]) {
   PO::Option<PO::Toggle> ReferenceTypes(
       PO::Description("Disable Reference types (externref)"sv));
   PO::Option<PO::Toggle> SIMD(PO::Description("Enable SIMD"sv));
+  PO::Option<PO::Toggle> TailCall(PO::Description("Enable Tail Call"sv));
   PO::Option<PO::Toggle> All(PO::Description("Enable all features"sv));
 
   auto Parser = PO::ArgumentParser();
@@ -45,6 +46,7 @@ int main(int Argc, const char *Argv[]) {
            .add_option("disable-bulk-memory"sv, BulkMemoryOperations)
            .add_option("disable-reference-types"sv, ReferenceTypes)
            .add_option("enable-simd"sv, SIMD)
+           .add_option("enable-tail-call"sv, TailCall)
            .add_option("enable-all"sv, All)
            .parse(Argc, Argv)) {
     return EXIT_FAILURE;
@@ -64,8 +66,12 @@ int main(int Argc, const char *Argv[]) {
   if (SIMD.value()) {
     Conf.addProposal(WasmEdge::Proposal::SIMD);
   }
+  if (TailCall.value()) {
+    Conf.addProposal(WasmEdge::Proposal::TailCall);
+  }
   if (All.value()) {
     Conf.addProposal(WasmEdge::Proposal::SIMD);
+    Conf.addProposal(WasmEdge::Proposal::TailCall);
   }
 
   std::filesystem::path InputPath = std::filesystem::absolute(WasmName.value());

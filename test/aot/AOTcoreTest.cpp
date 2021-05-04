@@ -55,7 +55,12 @@ TEST_P(CoreTest, TestSuites) {
     Path.replace_extension(std::filesystem::u8path(".so"sv));
     const auto SOPath = Path.u8string();
     auto Data = *Loader.loadFile(Filename);
-    auto Module = *Loader.parseModule(Data);
+    std::unique_ptr<WasmEdge::AST::Module> Module;
+    if (auto Res = Loader.parseModule(Data); !Res) {
+      return Unexpect(Res);
+    } else {
+      Module = std::move(*Res);
+    }
     if (auto Res = ValidatorEngine.validate(*Module); !Res) {
       return Unexpect(Res);
     }

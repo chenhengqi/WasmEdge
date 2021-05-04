@@ -428,7 +428,8 @@ Expect<void> FormChecker::checkInstr(const AST::Instruction &Instr) {
     }
     return unreachable();
 
-  case OpCode::Call: {
+  case OpCode::Call:
+  case OpCode::Return_call: {
     auto N = Instr.getTargetIndex();
     if (Funcs.size() <= N) {
       /// Call function index out of range
@@ -437,9 +438,17 @@ Expect<void> FormChecker::checkInstr(const AST::Instruction &Instr) {
                                              N, Funcs.size()));
       return Unexpect(ErrCode::InvalidFuncIdx);
     }
-    return StackTrans(Types[Funcs[N]].first, Types[Funcs[N]].second);
+    if (auto Res = StackTrans(Types[Funcs[N]].first, Types[Funcs[N]].second);
+        Instr.getOpCode() == OpCode::Call || !Res) {
+      return Res;
+    }
+    if (auto Res = popTypes(Returns); !Res) {
+      return Unexpect(Res);
+    }
+    return unreachable();
   }
-  case OpCode::Call_indirect: {
+  case OpCode::Call_indirect:
+  case OpCode::Return_call_indirect: {
     auto N = Instr.getTargetIndex();
     auto T = Instr.getSourceIndex();
     /// Check source table index.
@@ -463,7 +472,14 @@ Expect<void> FormChecker::checkInstr(const AST::Instruction &Instr) {
     if (auto Res = popType(VType::I32); !Res) {
       return Unexpect(Res);
     }
-    return StackTrans(Types[N].first, Types[N].second);
+    if (auto Res = StackTrans(Types[N].first, Types[N].second);
+        Instr.getOpCode() == OpCode::Call_indirect || !Res) {
+      return Res;
+    }
+    if (auto Res = popTypes(Returns); !Res) {
+      return Unexpect(Res);
+    }
+    return unreachable();
   }
 
   /// Reference Instructions.
