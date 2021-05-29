@@ -3,7 +3,6 @@
 #include "common/filesystem.h"
 #include "common/log.h"
 #include "host/wasi/wasimodule.h"
-#include "host/wasmedge_process/processmodule.h"
 
 namespace WasmEdge {
 namespace VM {
@@ -28,12 +27,6 @@ void VM::initVM() {
         std::make_unique<Host::WasiModule>();
     InterpreterEngine.registerModule(StoreRef, *WasiMod.get());
     ImpObjs.insert({HostRegistration::Wasi, std::move(WasiMod)});
-  }
-  if (Conf.hasHostRegistration(HostRegistration::WasmEdge_Process)) {
-    std::unique_ptr<Runtime::ImportObject> ProcMod =
-        std::make_unique<Host::WasmEdgeProcessModule>();
-    InterpreterEngine.registerModule(StoreRef, *ProcMod.get());
-    ImpObjs.insert({HostRegistration::WasmEdge_Process, std::move(ProcMod)});
   }
 }
 
