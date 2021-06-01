@@ -13,3 +13,4 @@
 #pragma once
 
 #cmakedefine HAVE_MMAP
+#cmakedefine HAVE_PWD_H

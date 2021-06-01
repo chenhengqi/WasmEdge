@@ -2,11 +2,13 @@
 
 include(CheckCXXSymbolExists)
 check_cxx_symbol_exists(mmap sys/mman.h HAVE_MMAP)
+check_cxx_symbol_exists(mmap pwd.h HAVE_PWD_H)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 add_library(wasmedgeSystem
   allocator.cpp
   mmap.cpp
+  path.cpp
 )
 
 target_include_directories(wasmedgeSystem
