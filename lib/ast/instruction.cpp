@@ -260,11 +260,19 @@ Expect<void> Instruction::loadBinary(FileMgr &Mgr, const Configure &Conf) {
   case OpCode::Memory__fill:
     return readCheck(0x00);
   case OpCode::Memory__init:
+    if (Code == OpCode::Memory__init && !Conf.hasDataCountSection()) {
+      return logLoadError(ErrCode::DataCountRequired, Mgr.getOffset(),
+                          ASTNodeAttr::Instruction);
+    }
     if (auto Res = readU32(SourceIdx); !Res) {
       return Unexpect(Res);
     }
     return readCheck(0x00);
   case OpCode::Data__drop:
+    if (!Conf.hasDataCountSection()) {
+      return logLoadError(ErrCode::DataCountRequired, Mgr.getOffset(),
+                          ASTNodeAttr::Instruction);
+    }
     return readU32(TargetIdx);
 
   /// Const Instructions.
